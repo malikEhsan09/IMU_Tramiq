@@ -1,0 +1,53 @@
+# Dataset Configuration File
+# Lines starting with '#' are comments and are ignored.
+# Format: key = value
+
+dataset_name    = Prerecorded Dataset 1
+
+imu_file        = Datasets/DS2/RLG.csv
+gnss_file       = Datasets/DS2/pvtds1.csv
+
+# 1-based start indices (will be converted to 0-based internally)
+imu_start_idx   = 821
+gnss_start_idx  = 8
+
+imu_rate        = 200
+gnss_rate       = 10
+
+# GNSS column layout (0-based column indices in the CSV/TXT file)
+# DS6: index=col0 (skip), time=col1, lat=col2, lon=col3, h=col4, vn=col5, ve=col6
+gnss_col_time   = 1
+gnss_col_lat    = 2
+gnss_col_lon    = 3
+gnss_col_h      = 4
+gnss_col_vn     = 5
+gnss_col_ve     = 6
+
+# Yaw override: set to 'auto' for gyro-computed yaw, or a numeric value in degrees
+yaw_override    = 152
+
+# Lever arm: GNSS antenna w.r.t. IMU in body frame, x y z in metres
+lever_arm       = 0.0, 0.0, -1.0
+
+# Outage intervals: each line is "start_time, end_time"
+outage_intervals_count = 7
+outage_0  = 454415, 454435
+outage_1  = 454560, 454580
+outage_2  = 454660, 454680
+outage_3  = 454760, 454780
+outage_4  = 454808, 454828
+outage_5  = 454960, 454980
+outage_6  = 455000, 455020
+
+# Add comments
+
+comment = """
+Date: 13 March 2026
+Time:  11:12 AM
+Time of week: 454317.0s
+Duration: 12 minutes 10 seconds
+Location: Islamabad
+Weather Conditions: This data was gathered on a sunny day with good weather conditions.
+
+Anomaly1: For starting 288 seconds the GNSS PVT data was not stable
+"""
