@@ -1,0 +1,41 @@
+# Dataset Configuration File
+# Lines starting with '#' are comments and are ignored.
+# Format: key = value
+
+dataset_name    = DS4
+
+imu_file        = Datasets/DS4/RLG.csv
+gnss_file       = Datasets/DS4/pvtds1.csv
+
+# 1-based start indices (will be converted to 0-based internally)
+imu_start_idx   = 2821
+gnss_start_idx  = 8
+
+imu_rate        = 200
+gnss_rate       = 10
+
+# GNSS column layout (0-based column indices in the CSV/TXT file)
+# DS2: time=col1, lat=col2, lon=col3, h=col4, vn=col5, ve=col6
+gnss_col_time   = 1
+gnss_col_lat    = 2
+gnss_col_lon    = 3
+gnss_col_h      = 4
+gnss_col_vn     = 5
+gnss_col_ve     = 6
+
+# Yaw override: set to 'auto' for gyro-computed yaw, or a numeric value in degrees
+yaw_override    = auto
+
+# Lever arm: GNSS antenna w.r.t. IMU in body frame, x y z in metres
+lever_arm       = -1.28, 0.0, -1.28
+
+# Outage intervals: each line is "start_time, end_time"
+outage_intervals_count = 8
+outage_0  = 391195, 391196
+outage_1  = 391218, 391238
+outage_2  = 391300, 391320
+outage_3  = 391400, 391420
+outage_4  = 391500, 391520
+outage_5  = 391600, 391620
+outage_6  = 391700, 391720
+outage_7  = 391800, 391820

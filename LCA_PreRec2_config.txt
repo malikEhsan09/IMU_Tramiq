@@ -1,0 +1,51 @@
+# Dataset Configuration File
+# Lines starting with '#' are comments and are ignored.
+# Format: key = value
+
+dataset_name    = DS3
+
+imu_file        = Datasets/DS3/RLG.csv
+gnss_file       = Datasets/DS3/pvtds1.csv
+
+# 1-based start indices (will be converted to 0-based internally)
+imu_start_idx   = 821
+gnss_start_idx  = 100
+
+imu_rate        = 200
+gnss_rate       = 10
+
+# GNSS column layout (0-based column indices in the CSV/TXT file)
+# DS6: index=col0 (skip), time=col1, lat=col2, lon=col3, h=col4, vn=col5, ve=col6
+gnss_col_time   = 1
+gnss_col_lat    = 2
+gnss_col_lon    = 3
+gnss_col_h      = 4
+gnss_col_vn     = 5
+gnss_col_ve     = 6
+
+# Yaw override: set to 'auto' for gyro-computed yaw, or a numeric value in degrees
+yaw_override    = auto
+
+# Lever arm: GNSS antenna w.r.t. IMU in body frame, x y z in metres
+lever_arm       = 0.0, 0.0, -1.0
+
+# Outage intervals: each line is "start_time, end_time"
+outage_intervals_count = 8
+outage_0  = 388800, 388820
+outage_1  = 389000, 389020
+outage_2  = 389100, 389120
+outage_3  = 389200, 389220
+outage_4  = 389300, 389320
+outage_5  = 389700, 389720
+outage_6  = 389800, 389820
+outage_7  = 389300, 389320
+                    
+comment = """
+Date:
+Time: 
+Time of week:
+
+Comments:
+
+Anomalies:
+"""
