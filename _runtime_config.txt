@@ -2,14 +2,14 @@
 # Lines starting with '#' are comments and are ignored.
 # Format: key = value
 
-dataset_name    = DS3
+dataset_name    = Prerecorded Dataset 1
 
-imu_file        = Datasets/DS3/RLG.csv
-gnss_file       = Datasets/DS3/pvtds1.csv
+imu_file        = Datasets/DS2/RLG.csv
+gnss_file       = Datasets/DS2/pvtds1.csv
 
 # 1-based start indices (will be converted to 0-based internally)
 imu_start_idx   = 821
-gnss_start_idx  = 100
+gnss_start_idx  = 8
 
 imu_rate        = 200
 gnss_rate       = 10
@@ -24,28 +24,25 @@ gnss_col_vn     = 5
 gnss_col_ve     = 6
 
 # Yaw override: set to 'auto' for gyro-computed yaw, or a numeric value in degrees
-yaw_override    = auto
+yaw_override    = 152
 
 # Lever arm: GNSS antenna w.r.t. IMU in body frame, x y z in metres
 lever_arm       = 0.0, 0.0, -1.0
 
 # Outage intervals: each line is "start_time, end_time"
-                    
+
+# Add comments
+
 comment = """
-Date:
-Time: 
-Time of week:
+Date: 13 March 2026
+Time:  11:12 AM
+Time of week: 454317.0s
+Duration: 12 minutes 10 seconds
+Location: Islamabad
+Weather Conditions: This data was gathered on a sunny day with good weather conditions.
+Anomalies: For starting 300 seconds the GNSS PVT data was inconsistant.
+Reason: Laptop battery was low so it was not operating in performance mode. Preformance mode is recommended for optimal TRAMIQSDR solution.
 
-Comments:
-
-Anomalies:
+This is a new comment
 """
-outage_intervals_count=8
-outage_1=388800.0,388820.0
-outage_2=389000.0,389020.0
-outage_3=389100.0,389120.0
-outage_4=389200.0,389220.0
-outage_5=389300.0,389320.0
-outage_6=389700.0,389720.0
-outage_7=389800.0,389820.0
-outage_8=389300.0,389320.0
+outage_intervals_count=0

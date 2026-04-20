@@ -9,6 +9,7 @@ APP_NAME="TRAMIQ INS/GNSS Navigation Solution Software"
 # Use a filesystem-safe filename (APP_NAME can contain slashes for display).
 DESKTOP_FILE_NAME="TRAMIQ INS-GNSS Navigation Solution Software.desktop"
 DESKTOP_FILE="$HOME/Desktop/$DESKTOP_FILE_NAME"
+LAUNCHER_SCRIPT="$SCRIPT_DIR/.launch_tramiq_desktop.sh"
 ICON="$SCRIPT_DIR/images/tramiq.png"
 
 # Use a generic icon if project icon is missing
@@ -16,28 +17,41 @@ if [ ! -f "$ICON" ]; then
     ICON="application-x-executable"
 fi
 
-# Prefer project venv python if available
-if [ -x "$SCRIPT_DIR/python/venv/bin/python" ]; then
-    PYTHON_BIN="$SCRIPT_DIR/python/venv/bin/python"
-else
-    PYTHON_BIN="python3"
-fi
-
-# Default command for this project; override with first argument if needed.
+# Build a launcher script so desktop execution always uses the correct environment.
+# You can override the launch command by passing the first argument.
 # Example:
-#   ./create_desktop_shortcut.sh "python3 python/pocket_trk.py -sig L1CA -prn 1"
+#   ./create_desktop_shortcut.sh "python3 \"$SCRIPT_DIR/python/pocket_trk.py\" -sig L1CA -prn 1"
 if [ "${1-}" != "" ]; then
     RUN_CMD="$1"
+    cat > "$LAUNCHER_SCRIPT" << EOF
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$SCRIPT_DIR"
+exec bash -lc '$RUN_CMD'
+EOF
 else
-    RUN_CMD="$PYTHON_BIN $SCRIPT_DIR/gui.py"
+    cat > "$LAUNCHER_SCRIPT" << EOF
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$SCRIPT_DIR"
+if [ -x "$SCRIPT_DIR/venv/bin/python" ]; then
+    exec "$SCRIPT_DIR/venv/bin/python" "$SCRIPT_DIR/gui.py"
+elif [ -x "$SCRIPT_DIR/python/venv/bin/python" ]; then
+    exec "$SCRIPT_DIR/python/venv/bin/python" "$SCRIPT_DIR/gui.py"
+else
+    exec python3 "$SCRIPT_DIR/gui.py"
 fi
+EOF
+fi
+
+chmod +x "$LAUNCHER_SCRIPT"
 
 cat > "$DESKTOP_FILE" << EOF
 [Desktop Entry]
 Type=Application
 Name=$APP_NAME
 Comment=Run tramiqsdr project
-Exec=bash -lc 'cd "$SCRIPT_DIR" && $RUN_CMD'
+Exec=bash "$LAUNCHER_SCRIPT"
 Icon=$ICON
 Path=$SCRIPT_DIR
 Terminal=true
