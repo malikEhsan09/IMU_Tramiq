@@ -2,10 +2,10 @@
 # Lines starting with '#' are comments and are ignored.
 # Format: key = value
 
-dataset_name    = DS4
+dataset_name    = Prerecorded Dataset 3
 
-imu_file        = Datasets/DS4/RLG.csv
-gnss_file       = Datasets/DS4/pvtds1.csv
+imu_file        = Datasets/DS7/RLG.csv
+gnss_file       = Datasets/DS7/pvtds1.csv
 
 # 1-based start indices (will be converted to 0-based internally)
 imu_start_idx   = 2821
@@ -30,12 +30,20 @@ yaw_override    = auto
 lever_arm       = -1.28, 0.0, -1.28
 
 # Outage intervals: each line is "start_time, end_time"
-outage_intervals_count = 8
-outage_0  = 391195, 391196
-outage_1  = 391218, 391238
-outage_2  = 391300, 391320
-outage_3  = 391400, 391420
-outage_4  = 391500, 391520
-outage_5  = 391600, 391620
-outage_6  = 391700, 391720
-outage_7  = 391800, 391820
+outage_intervals_count = 7
+outage_0 = 309100, 309120
+outage_1 = 309300, 309320
+outage_2 = 309500, 309520
+outage_3 = 309600, 309620
+outage_4 = 309700, 309720
+outage_5 = 309800, 309820
+outage_6 = 309900, 309920
+
+# Add comments
+
+comment = """
+Date: 15 April 2026
+Time of week: 308509.0s
+Duration: 25 minutes 
+Location: Islamabad - Lahore Motorway
+"""

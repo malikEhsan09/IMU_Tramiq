@@ -2,20 +2,20 @@
 # Lines starting with '#' are comments and are ignored.
 # Format: key = value
 
-dataset_name    = Prerecorded Dataset 1
+dataset_name    = Prerecorded Dataset 6
 
-imu_file        = Datasets/DS9/RLG.csv
-gnss_file       = Datasets/DS9/pvtds1.csv
+imu_file        = Datasets/DS3/RLG.csv
+gnss_file       = Datasets/DS3/pvtds1.csv
 
 # 1-based start indices (will be converted to 0-based internally)
-imu_start_idx   = 2821
-gnss_start_idx  = 8
+imu_start_idx   = 821
+gnss_start_idx  = 100
 
 imu_rate        = 200
 gnss_rate       = 10
 
 # GNSS column layout (0-based column indices in the CSV/TXT file)
-# DS2: time=col1, lat=col2, lon=col3, h=col4, vn=col5, ve=col6
+# DS6: index=col0 (skip), time=col1, lat=col2, lon=col3, h=col4, vn=col5, ve=col6
 gnss_col_time   = 1
 gnss_col_lat    = 2
 gnss_col_lon    = 3
@@ -27,31 +27,26 @@ gnss_col_ve     = 6
 yaw_override    = auto
 
 # Lever arm: GNSS antenna w.r.t. IMU in body frame, x y z in metres
-lever_arm       = -1.28, 0.0, -1.28
+lever_arm       = 0.0, 0.0, -1.0
 
 # Outage intervals: each line is "start_time, end_time"
 outage_intervals_count = 8
-outage_0  = 316100,316120
-outage_1  = 316200,316220
-outage_2  = 316300,316320
-outage_3  = 316400,316420
-outage_4  = 316500,316520
-outage_5  = 316600,316620
-outage_6  = 316700,316720
-outage_7  = 316800,316820
-
+outage_0  = 388800, 388820
+outage_1  = 389000, 389020
+outage_2  = 389100, 389120
+outage_3  = 389200, 389220
+outage_4  = 389300, 389320
+outage_5  = 389700, 389720
+outage_6  = 389800, 389820
+outage_7  = 389300, 389320
+                    
 # Add comments
 
 comment = """
-UTC
-Date: 15 April 2026
-Week: 
-Time:
+Date: 10 April 2026
+Time of week: 388717.0s
+Duration: 20 minutes 42 seconds
+Location: Gulberg Green Islamabad
 
-iTOW
-GPS Week:
-Time of week: 315709.0s
-
-Duration: 19 minutes 45 seconds
-Location: Islamabad - Lahore Motorway, Pakistan
+Data was gathered in a noisy envirnoment
 """

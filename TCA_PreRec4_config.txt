@@ -12,16 +12,16 @@
 # =============================================================================
 # 1. DATASET IDENTIFICATION AND INPUT FILES
 # =============================================================================
-dataset_name = Prerecorded Dataset 3
+dataset_name = Prerecorded Dataset 4
 
 # IMU observation file
-imu_file = Datasets/DS5/RLG.csv
+imu_file = Datasets/DS10/RLG.csv
 
 # GNSS reference / processed solution file
-gnss = Datasets/DS5/pvtds1.csv
+gnss = Datasets/DS10/pvtds1.csv
 
 # Raw GNSS observation file
-rawgnss = Datasets/DS5/correctdsa1.csv
+rawgnss = Datasets/DS10/correctdsa1.csv
 
 
 # =============================================================================
@@ -30,7 +30,7 @@ rawgnss = Datasets/DS5/correctdsa1.csv
 # old_time:
 #   - Use 'auto' to compute the processing start time from the dataset
 #   - Or provide a numeric time value in seconds
-old_time = 392800.0
+old_time = 318696.0
 
 # end_time:
 #   - Use 'auto' to compute the processing end time from the dataset
@@ -48,13 +48,13 @@ gnss_mask_angle_deg = 15.0
 gnss_mask_signal_strength_dbhz = 35.0
 
 # Innovation threshold for pseudorange measurements
-gnss_range_innovation_threshold = 200000.0
+gnss_range_innovation_threshold = 2000.0
 
 # Innovation threshold for range-rate measurements
-gnss_rate_innovation_threshold = 100000.0
+gnss_rate_innovation_threshold = 1000.0
 
 # Intended maximum number of GNSS measurements per epoch
-gnss_intend_no_meas = 40
+gnss_intend_no_meas = 10
 
 # Number of signal identifiers to omit
 gnss_omit_count = 1
@@ -77,33 +77,33 @@ est_clock_drift_mps = 0.0
 # 5. TIGHTLY COUPLED KALMAN FILTER (TC_KF) CONFIGURATION
 # =============================================================================
 # -----------------------------------------------------------------------------
-# 5.1 Initial State Covariance (P-Matrix)
+# 5.1 Initial State Covariance P
 # -----------------------------------------------------------------------------
-tc_init_att_unc = 20.1
-tc_init_vel_unc = 0.1
-tc_init_pos_unc = 0.01
+tc_init_att_unc = 23.0
+tc_init_vel_unc = 0.05
+tc_init_pos_unc = 25
 tc_init_b_a_unc = 20
 tc_init_b_g_unc = 0.1
-tc_init_clock_offset_unc = 400.1
-tc_init_clock_drift_unc = 400.1
-tc_dopplerbias = 10.0
+tc_init_clock_offset_unc = 300.0
+tc_init_clock_drift_unc = 30.1
+tc_dopplerbias = 5.0
 
 # -----------------------------------------------------------------------------
-# 5.2 Process Noise Covariance (Q-Matrix)
+# 5.2 Process Noise Covariance Q
 # -----------------------------------------------------------------------------
 tc_gyro_noise_PSD = 3.0461e-10
 tc_accel_noise_PSD = 2.401e-9
 tc_accel_bias_PSD = 6.114e-9
 tc_gyro_bias_PSD = 3.7408e-14
-tc_clock_phase_PSD = 0.01
-tc_clock_freq_PSD = 1
-tc_doppler_bias_Q = 0.01
+tc_clock_phase_PSD = 100
+tc_clock_freq_PSD = 10.0
+tc_doppler_bias_Q = 0.1
 
 # -----------------------------------------------------------------------------
-# 5.3 Measurement Noise Covariance (R-Matrix)
+# 5.3 Measurement Noise Covariance R
 # -----------------------------------------------------------------------------
-tc_pseudo_range_SD = 6
-tc_range_rate_SD = 0.2
+tc_pseudo_range_SD = 50.0
+tc_range_rate_SD = 0.01
 
 # -----------------------------------------------------------------------------
 # 5.4 Stationarity / Detection Parameters
@@ -115,7 +115,7 @@ tc_StationarityDetectionAccelerometerThreshold = 0.01
 tc_StationarityFlag = 0
 
 
-# =============================================================================
+==========================================================
 # 6. MLS CONFIGURATION
 # =============================================================================
 mls_MAXloop = 10
@@ -130,7 +130,7 @@ mls_K1 = 5.0
 # Lever arm from GNSS antenna to IMU body frame [m]
 l_ba_b_x = -1.28
 l_ba_b_y = 0.0
-l_ba_b_z = 1.28
+l_ba_b_z = -1.28
 
 
 # =============================================================================
@@ -180,28 +180,10 @@ yaw_deg = auto
 # =============================================================================
 
 outage_intervals_count = 7
-
-outage_1 = 392910.0,392930.0,0
-outage_2 = 392970.0,392990.0,0
-outage_3 = 393050.00,393070.00,0
-outage_4 = 393100.312,393120.312,0
-outage_5 = 393150.312,393170.312,0
-outage_6 = 393200.624,393220.624,0
-
-comment = """
-Date: 13 March 2026
-Time:  11:12 AM
-Time of week: 454317.0s
-Duration: 12 minutes 10 seconds
-Location: Islamabad
-Weather Conditions: This data was gathered on a sunny day with good weather conditions.
-
-Anomaly1: For starting 288 seconds the GNSS PVT data.
-
-Anomaly2: In start, severe jitters are available in BEIDOU.
-Constellation anomalies: Beidou constellations has severe upto 10000 meter jitters in start and 10 to 100s of meters in other constellations in complete motion profile.
-
-Anomaly1 Reason: Laptop battery was low so it was not operating in performance mode. Performance mode is recommended for optimal TRAMIQSDR solution.
-
-Anomaly2 Reason: Biase and noises are affecting the pseudo range and range rate of GNSS.
-"""
+outage_0  = 319100, 319120,0
+outage_1  = 319200, 319220,0
+outage_2  = 319400, 319420,0
+outage_3  = 319500, 319520,0
+outage_4  = 319600, 319620,0
+outage_5  = 319700, 319720,0
+outage_6  = 319800, 319820,0

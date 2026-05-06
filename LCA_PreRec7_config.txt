@@ -2,10 +2,10 @@
 # Lines starting with '#' are comments and are ignored.
 # Format: key = value
 
-dataset_name    = Prerecorded Dataset 2
+dataset_name    = Prerecorded Dataset 7
 
-imu_file        = Datasets/DS8/RLG.csv
-gnss_file       = Datasets/DS8/pvtds1.csv
+imu_file        = Datasets/DS4/RLG.csv
+gnss_file       = Datasets/DS4/pvtds1.csv
 
 # 1-based start indices (will be converted to 0-based internally)
 imu_start_idx   = 2821
@@ -30,23 +30,23 @@ yaw_override    = auto
 lever_arm       = -1.28, 0.0, -1.28
 
 # Outage intervals: each line is "start_time, end_time"
-outage_intervals_count = 10
-outage_0  = 314300,314320
-outage_1  = 314400,314420
-outage_2  = 314500,314520
-outage_3  = 314600,314620
-outage_4  = 314700,314720
-outage_5  = 314890,314910
-outage_6  = 314980,315000
-outage_7  = 315080,315100
-outage_8  = 315180,315200
-outage_9  = 315280,315300
+outage_intervals_count = 8
+outage_0  = 391195, 391196
+outage_1  = 391218, 391238
+outage_2  = 391300, 391320
+outage_3  = 391400, 391420
+outage_4  = 391500, 391520
+outage_5  = 391600, 391620
+outage_6  = 391700, 391720
+outage_7  = 391800, 391820
 
 # Add comments
 
 comment = """
-Date: 15 April 2026
-Time of week: 313879.0s
-Duration: 26 minutes 50 seconds
-Location: Islamabad - Lahore Motorway
+Date: 10 April 2026
+Time of week: 390763.0s
+Duration: 19 minutes 47 seconds
+Location: Gulberg Green Islamabad
+
+Data was gathered in a noisy signal envirnoment
 """
