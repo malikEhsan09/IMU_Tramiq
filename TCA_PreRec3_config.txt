@@ -189,3 +189,17 @@ outage_5  = 309600,309620,0
 outage_6  = 309700,309720,0
 outage_7  = 309800,309820,0
 outage_8  = 309900,309920,0
+
+comment = """
+UTC
+Date: 15/04/2026
+Day of Week: Wednesday 
+Time: 13:41:35
+
+iTOW
+GPS Week: 2414
+Time of week: 308495.0s
+
+Duration: 25 minutes 
+Location: Islamabad - Lahore Motorway, Pakistan
+"""

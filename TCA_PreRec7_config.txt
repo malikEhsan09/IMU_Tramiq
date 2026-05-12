@@ -188,3 +188,21 @@ outage_5  = 391500,391520,0
 outage_6  = 391600,391620,0
 outage_7  = 391700,391720,0
 outage_8  = 391800,391820,0
+
+comment = """
+UTC
+Date: 10/04/2026
+Day of Week: Friday 
+Time: 12:32:43
+
+iTOW
+GPS Week: 2413
+Time of week: 390763.0s
+
+Duration: 20 minutes 42 seconds
+Location: Gulberg Green Islamabad, Pakistan
+
+GNSS Data was extremely noisy.
+Reason:
+Jammers were activated in the area due to the arrival of foriegn deligation.
+"""

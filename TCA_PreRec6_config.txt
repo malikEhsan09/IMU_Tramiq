@@ -189,3 +189,18 @@ outage_6  = 389700,389720,0
 outage_7  = 389800,389820,0
 
 
+comment = """
+UTC
+Date: 10/04/2026
+Day of Week: Friday 
+Time: 11:58:37
+
+iTOW
+GPS Week: 2413
+Time of week: 388717.0s
+
+Duration: 20 minutes 42 seconds
+Location: Gulberg Green Islamabad, Pakistan
+
+Data was gathered in a noisy envirnoment.
+"""

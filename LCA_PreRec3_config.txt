@@ -42,8 +42,15 @@ outage_6 = 309900, 309920
 # Add comments
 
 comment = """
-Date: 15 April 2026
-Time of week: 308509.0s
+UTC
+Date: 15/04/2026
+Day of Week: Wednesday 
+Time: 13:41:35
+
+iTOW
+GPS Week: 2414
+Time of week: 308495.0s
+
 Duration: 25 minutes 
-Location: Islamabad - Lahore Motorway
+Location: Islamabad - Lahore Motorway, Pakistan
 """

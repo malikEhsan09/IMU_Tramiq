@@ -7,6 +7,8 @@ import matplotlib.widgets as widgets
 from matplotlib.patches import Rectangle
 import os
 import subprocess
+import threading
+import time
 import glob
 import io
 import contextily as ctx
@@ -61,6 +63,12 @@ class INS_GUI:
         self.sim_mode        = tk.StringVar(value="LCA")
 
         self.app_dir = os.path.dirname(os.path.abspath(__file__))
+
+        # Loader / status pacing
+        self._status_min_display_ms = 700
+        self._status_last_change_t = 0.0
+        self._status_pending_after_id = None
+        self._loader_running = False
 
         self._apply_style()
         self.create_widgets()
@@ -320,6 +328,34 @@ class INS_GUI:
                                font=FONT_SMALL, bg=C_BG, fg=C_MUTED, anchor=tk.W)
         self.status.pack(side=tk.LEFT, fill=tk.X)
 
+        # Centered, in-window overlay shown while the simulation is running.
+        # Keep it subtle (small card + accent text) so it blends in.
+        self.loading_overlay = tk.Frame(self.root, bg=C_BG, bd=0, highlightthickness=0)
+        self.loading_card = tk.Frame(
+            self.loading_overlay,
+            bg=C_SURFACE,
+            bd=0,
+            relief="flat",
+            highlightthickness=1,
+            highlightbackground=C_BORDER,
+        )
+        self.loading_card.pack(padx=18, pady=14)
+        self.loading_topline = tk.Frame(self.loading_card, bg=C_ACCENT, height=3)
+        self.loading_topline.pack(fill=tk.X, padx=14, pady=(8, 10))
+        self.loading_label = tk.Label(
+            self.loading_card,
+            text="",
+            font=("Segoe UI", 15, "bold"),
+            fg=C_ACCENT,
+            bg=C_SURFACE,
+            justify=tk.CENTER,
+            wraplength=400,
+        )
+        self.loading_label.pack(padx=18, pady=(0, 14))
+        self.loading_bar = ttk.Progressbar(self.loading_card, mode="indeterminate", length=220)
+        self.loading_bar.pack(padx=18, pady=(0, 14))
+        self.loading_overlay.place_forget()
+
     def _section_label(self, parent, text):
         row = tk.Frame(parent, bg=C_BG)
         row.pack(fill=tk.X, pady=(12, 4))
@@ -344,9 +380,114 @@ class INS_GUI:
 
     def _set_status(self, msg, state="idle"):
         colour = {"idle": C_MUTED, "busy": "#fd7e14", "ok": C_STATUS_OK, "error": C_STATUS_ERR}.get(state, C_MUTED)
-        self.status.config(text=msg, fg=colour)
-        self._status_dot.itemconfig(self._status_dot_id, fill=colour)
-        self.root.update()
+
+        # Avoid rapid flashing of status messages (but never delay errors).
+        if state != "error":
+            now = time.monotonic()
+            elapsed_ms = (now - (self._status_last_change_t or 0.0)) * 1000.0
+            if elapsed_ms < self._status_min_display_ms:
+                if self._status_pending_after_id is not None:
+                    try:
+                        self.root.after_cancel(self._status_pending_after_id)
+                    except Exception:
+                        pass
+                delay_ms = int(self._status_min_display_ms - elapsed_ms)
+                self._status_pending_after_id = self.root.after(delay_ms, lambda: self._set_status(msg, state))
+                return
+
+        self._status_last_change_t = time.monotonic()
+        self._status_pending_after_id = None
+
+        if state == "busy":
+            # Center overlay while running; keep bottom bar quiet.
+            self.status.config(text="", fg=colour)
+            self._status_dot.itemconfig(self._status_dot_id, fill=colour)
+
+            wrap = max(240, self.root.winfo_width() - 240)
+            self.loading_label.config(text=msg, wraplength=wrap, fg=colour)
+            self.loading_overlay.place(relx=0.5, rely=0.5, anchor="center")
+            self.loading_overlay.lift()
+
+            if not self._loader_running:
+                try:
+                    self.loading_bar.start(12)
+                except Exception:
+                    pass
+                self._loader_running = True
+        else:
+            # Hide overlay when not busy.
+            if hasattr(self, "loading_overlay") and self.loading_overlay.winfo_ismapped():
+                self.loading_overlay.place_forget()
+            if getattr(self, "_loader_running", False):
+                try:
+                    self.loading_bar.stop()
+                except Exception:
+                    pass
+                self._loader_running = False
+
+            self.status.config(text=msg, fg=colour)
+            self._status_dot.itemconfig(self._status_dot_id, fill=colour)
+
+        self.root.update_idletasks()
+
+    def _run_executable_with_loader(self, algo, config_file, busy_msg):
+        """
+        Run the external executable without freezing the Tk UI.
+        Shows the centered loader overlay while running.
+        """
+        exe_name = "./lca_sim" if algo == "LCA" else "tca_app"
+        exe_path = os.path.join(self.app_dir, exe_name)
+        if not os.path.isfile(exe_path):
+            messagebox.showerror("Executable Not Found", f"Cannot find:\n{exe_path}")
+            self._set_status("Executable not found.", "error")
+            return None
+        if not os.access(exe_path, os.X_OK):
+            messagebox.showerror("Permission Error", f"File exists but is not executable:\n{exe_path}\n\nRun: chmod +x '{exe_path}'")
+            self._set_status("Executable is not executable.", "error")
+            return None
+
+        self._set_status(busy_msg, "busy")
+
+        result = {"stdout": None, "stderr": None, "returncode": None, "exc": None, "timed_out": False}
+        done = tk.BooleanVar(value=False)
+
+        def worker():
+            try:
+                cp = subprocess.run([exe_path, config_file], capture_output=True, text=True, timeout=3600, cwd=self.app_dir)
+                result["stdout"] = cp.stdout
+                result["stderr"] = cp.stderr
+                result["returncode"] = cp.returncode
+            except subprocess.TimeoutExpired:
+                result["timed_out"] = True
+            except Exception as exc:
+                result["exc"] = exc
+            finally:
+                try:
+                    self.root.after(0, lambda: done.set(True))
+                except Exception:
+                    pass
+
+        threading.Thread(target=worker, daemon=True).start()
+
+        try:
+            self.root.wait_variable(done)
+        except Exception:
+            return None
+
+        if result["timed_out"]:
+            messagebox.showerror("Timeout", "Simulation exceeded 60-minute limit.")
+            self._set_status("Simulation timed out.", "error")
+            return None
+        if result["exc"] is not None:
+            messagebox.showerror("Error", f"Failed to launch executable:\n{result['exc']}")
+            self._set_status("Error launching executable.", "error")
+            return None
+        if result["returncode"] not in (0, None) and result["returncode"] != 0:
+            messagebox.showerror("Simulation Error", f"Executable failed with code {result['returncode']}:\n{result['stderr']}")
+            self._set_status("Simulation failed.", "error")
+            return None
+
+        return result["stdout"]
 
     def _update_algo_button_colors(self):
         for val, btn in self.algo_buttons.items():
@@ -628,7 +769,7 @@ class INS_GUI:
                 ]
                 ax.legend(handles=legend_elements, fontsize=9, frameon=True, fancybox=False, edgecolor=C_BORDER, loc='best')
                 try:
-                    ctx.add_basemap(ax, crs='EPSG:4326', source=ctx.providers.OpenStreetMap.Mapnik)
+                    ctx.add_basemap(ax, crs='EPSG:4326', source=ctx.providers.CartoDB.Positron)
                 except Exception as e:
                     print(f"Could not add basemap: {e}")
                 preview_ok = True
@@ -651,7 +792,7 @@ class INS_GUI:
         main_pane.add(right_frame, width=350, minsize=250)
         hdr_row = tk.Frame(right_frame, bg=C_BG)
         hdr_row.pack(fill=tk.X, pady=(0, 8))
-        tk.Label(hdr_row, text="DATASET-HISTORY", font=("Segoe UI", 9, "bold"), bg=C_BG, fg=C_MUTED).pack(side=tk.LEFT)
+        tk.Label(hdr_row, text="DATASET COMMENTS", font=("Segoe UI", 9, "bold"), bg=C_BG, fg=C_MUTED).pack(side=tk.LEFT)
         txt_outer = tk.Frame(right_frame, bg=C_BORDER)
         txt_outer.pack(fill=tk.BOTH, expand=True)
         txt_inner = tk.Frame(txt_outer, bg=C_SURFACE)
@@ -815,12 +956,12 @@ class INS_GUI:
             self.config['gnss_intend_no_meas'] = result.get('gnss_intend_no_meas', self.config.get('gnss_intend_no_meas', 40))
 
         # First run: no outages (baseline RMS)
-        self._set_status("Running simulation without outages (baseline)…", "busy")
         baseline_config = self.config.copy()
         baseline_config['outages'] = []
         baseline_runtime = self.create_runtime_config(config_file, baseline_config['outages'], selected_algo,
                                                       gnss_intend_no_meas=baseline_config.get('gnss_intend_no_meas'))
-        baseline_stdout = self._run_executable(selected_algo, baseline_runtime)
+        baseline_stdout = self._run_executable_with_loader(selected_algo, baseline_runtime,
+                                                          "Running simulation without outages (baseline)…")
         if baseline_stdout is None:
             return
         baseline_errors_df, _, _, _, _, _ = self.parse_simulation_output(baseline_stdout)
@@ -832,10 +973,10 @@ class INS_GUI:
         print(f"Non‑outage RMS - Horizontal: {self.non_outage_rms_h:.2f} m, Vertical: {self.non_outage_rms_v:.2f} m")
 
         # Second run: with user‑defined outages
-        self._set_status(f"Running {selected_algo} simulation with outages…", "busy")
         runtime_config_file = self.create_runtime_config(config_file, self.config['outages'], selected_algo,
                                                          gnss_intend_no_meas=self.config.get('gnss_intend_no_meas'))
-        stdout = self._run_executable(selected_algo, runtime_config_file)
+        stdout = self._run_executable_with_loader(selected_algo, runtime_config_file,
+                                                  f"Running {selected_algo} simulation with outages…")
         if stdout is None:
             return
         errors_df, traj_df, gnss_ref_df, prn_df, outage_info, outage_points = self.parse_simulation_output(stdout)
@@ -1283,7 +1424,7 @@ class INS_GUI:
                     ["Vertical RMS (m)", f"{self.non_outage_rms_v:.2f}"],
                     ["Vertical Max (m)", f"{vmax_mag:.2f}"],
                     ["Satellite count", f"{avg_sat_count or 0:d}"]],
-                "Error - GNSS vs Fused Position (Non‑outage Periods)",
+                "Error - GNSS vs Fused Position (Without Outages)",
                 ["Metric", "Value"], [0.64, 0.36])
 
         tbl2 = ax_tab2.table(cellText=outage_rows, colLabels=["Outage Interval", "Duration", "H Error", "V Error"],
@@ -1305,7 +1446,7 @@ class INS_GUI:
                 else:
                     cell.set_text_props(color=C_TEXT, ha='center', va='center')
                 cell.set_height(0.078)
-        ax_tab2.set_title("Outages Error - GNSS vs INS position", fontsize=15, pad=10, fontweight='bold')
+        ax_tab2.set_title("End-of-Outage Errors - GNSS vs INS position", fontsize=15, pad=10, fontweight='bold')
 
         make_table(ax_tab3,
                 [["Horizontal RMS (m)", f"{eohrms:.2f}"],
@@ -1313,7 +1454,7 @@ class INS_GUI:
                     ["Vertical RMS (m)", f"{eovrms:.2f}"],
                     ["Vertical Max (m)", f"{eovmax_mag:.2f}"],
                     ["Satellite count", f"{avg_sat_count_outage or 0:d}"]],
-                "Outage Error Summary", ["Metric", "Value"], [0.64, 0.36])
+                "End-of-Outage Errors Summary", ["Metric", "Value"], [0.64, 0.36])
 
         fig_stats.subplots_adjust(left=0.05, right=0.95, top=0.90, bottom=0.04)
 
@@ -1418,25 +1559,51 @@ class INS_GUI:
                 ax_prn.grid(True, linestyle='--', alpha=0.7)
                 ax_prn.set_ylim(0, y_max_prn + 1)
                 ax_prn.set_xlim(x_limits)
+                if avg_sat_count is not None:
+                    ax_prn.axhline(y=avg_sat_count, color='#2f855a', linestyle='--', linewidth=1.4, zorder=3)
+                    ax_prn.text(x_pos, avg_sat_count, f'Avg = {avg_sat_count:d}',
+                                color='#2f855a', fontsize=8, va='bottom', ha='right', backgroundcolor='white')
 
         if ax_prn is not None:
             ax_prn.set_xlabel('GPS Time (s)', fontsize=10)
         else:
             ax_vert.set_xlabel('GPS Time (s)', fontsize=10)
 
-        # Legend (original + improved)
-        legend_handles = [
-            plt.Line2D([0], [0], marker='.', color='#1f77b4', linestyle='None', markersize=6, label='Horizontal error'),
-            plt.Line2D([0], [0], marker='.', color='#2ca02c', linestyle='None', markersize=6, label='Vertical error')
+        # Legends: keep each legend specific to its graph, and include outage info everywhere.
+        # Horizontal-error legend
+        legend_horz = [
+            Line2D([0], [0], marker='.', color='#1f77b4', linestyle='None', markersize=6, label='Horizontal error'),
+            Line2D([0], [0], color='#1f77b4', linestyle='--', linewidth=1.5, label='Horizontal RMS')
         ]
         if outages_to_use:
-            legend_handles.append(Patch(facecolor='#ffcccc', edgecolor='red', alpha=0.35, label='Outage'))
+            legend_horz.append(Patch(facecolor='#ffcccc', edgecolor='red', alpha=0.35, label='Outage period'))
         if valid_end_points:
-            legend_handles.append(plt.Line2D([0], [0], marker='o', color='#d62728', markerfacecolor='yellow',
-                                            markersize=6, linestyle='None', label='End of outage'))
-        if has_prn:
-            legend_handles.append(Patch(facecolor='g', label='Satellite count'))
-        ax_horz.legend(handles=legend_handles, frameon=True, fancybox=False, loc='upper right', fontsize=8)
+            legend_horz.append(Line2D([0], [0], marker='o', color='#d62728', markerfacecolor='yellow',
+                                      markersize=6, linestyle='None', label='End of outage'))
+        ax_horz.legend(handles=legend_horz, frameon=True, fancybox=False, loc='upper right', fontsize=8)
+
+        # Vertical-error legend
+        legend_vert = [
+            Line2D([0], [0], marker='.', color='#2ca02c', linestyle='None', markersize=6, label='Vertical error'),
+            Line2D([0], [0], color='#2ca02c', linestyle='--', linewidth=1.5, label='Vertical RMS')
+        ]
+        if outages_to_use:
+            legend_vert.append(Patch(facecolor='#ffcccc', edgecolor='red', alpha=0.35, label='Outage period'))
+        if valid_end_points:
+            legend_vert.append(Line2D([0], [0], marker='o', color='#d62728', markerfacecolor='yellow',
+                                      markersize=6, linestyle='None', label='End of outage'))
+        ax_vert.legend(handles=legend_vert, frameon=True, fancybox=False, loc='upper right', fontsize=8)
+
+        # Satellite-count legend (only when that subplot exists)
+        if has_prn and ax_prn is not None and not prn_df.empty:
+            legend_prn = [
+                Patch(facecolor='g', label='Satellite count')
+            ]
+            if avg_sat_count is not None:
+                legend_prn.append(Line2D([0], [0], color='#2f855a', linestyle='--', linewidth=1.4, label='Average sat count'))
+            if outages_to_use:
+                legend_prn.append(Patch(facecolor='#ffcccc', edgecolor='red', alpha=0.35, label='Outage period'))
+            ax_prn.legend(handles=legend_prn, frameon=True, fancybox=False, loc='upper right', fontsize=8)
 
         fig_plots.tight_layout()
 
@@ -1509,7 +1676,7 @@ class INS_GUI:
             ax_map.set_ylim(min_lat - dlat*0.05, max_lat + dlat*0.05)
 
             try:
-                ctx.add_basemap(ax_map, crs='EPSG:4326', source=ctx.providers.OpenStreetMap.Mapnik)
+                ctx.add_basemap(ax_map, crs='EPSG:4326', source=ctx.providers.CartoDB.Positron)
             except Exception as e:
                 print(f"Could not add basemap: {e}")
 

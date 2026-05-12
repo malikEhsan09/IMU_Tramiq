@@ -43,10 +43,17 @@ outage_7  = 389300, 389320
 # Add comments
 
 comment = """
-Date: 10 April 2026
-Time of week: 388717.0s
-Duration: 20 minutes 42 seconds
-Location: Gulberg Green Islamabad
+UTC
+Date: 10/04/2026
+Day of Week: Friday 
+Time: 11:58:37
 
-Data was gathered in a noisy envirnoment
+iTOW
+GPS Week: 2413
+Time of week: 388717.0s
+
+Duration: 20 minutes 42 seconds
+Location: Gulberg Green Islamabad, Pakistan
+
+Data was gathered in a noisy envirnoment.
 """

@@ -1,5 +1,5 @@
 # =============================================================================
-# INS/GNSS Dataset Configuration
+# INS/GNSS Dataset Configuration-
 # =============================================================================
 # Notes:
 # - Lines beginning with '#' are comments and ignored by the parser.
